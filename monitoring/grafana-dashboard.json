@@ -1,0 +1,144 @@
+{
+  "dashboard": {
+    "title": "Alfred Microsoft Graph API",
+    "tags": ["alfred", "excel", "microsoft-graph"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{job=\"alfred-graph-api\"}[5m])",
+            "legendFormat": "{{method}} {{path}}"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 }
+      },
+      {
+        "id": 2,
+        "title": "Latency (p50, p95, p99)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket{job=\"alfred-graph-api\"}[5m]))",
+            "legendFormat": "p50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"alfred-graph-api\"}[5m]))",
+            "legendFormat": "p95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{job=\"alfred-graph-api\"}[5m]))",
+            "legendFormat": "p99"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }
+      },
+      {
+        "id": 3,
+        "title": "Error Rate by Status Code",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{job=\"alfred-graph-api\",status=~\"4..\"}[5m])",
+            "legendFormat": "4xx - {{status}}"
+          },
+          {
+            "expr": "rate(http_requests_total{job=\"alfred-graph-api\",status=~\"5..\"}[5m])",
+            "legendFormat": "5xx - {{status}}"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 }
+      },
+      {
+        "id": 4,
+        "title": "Microsoft Graph 429 Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(graph_api_throttled_total{job=\"alfred-graph-api\"}[5m])",
+            "legendFormat": "429 Throttled"
+          },
+          {
+            "expr": "rate(graph_api_retry_total{job=\"alfred-graph-api\"}[5m])",
+            "legendFormat": "Retries"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+        "alert": {
+          "name": "High Graph Throttle Rate",
+          "conditions": [
+            {
+              "evaluator": { "type": "gt", "params": [0.1] },
+              "operator": { "type": "and" },
+              "query": { "params": ["A", "5m", "now"] },
+              "reducer": { "type": "avg" },
+              "type": "query"
+            }
+          ],
+          "frequency": "1m",
+          "handler": 1,
+          "message": "Graph API throttle rate above 10%",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      },
+      {
+        "id": 5,
+        "title": "Pod CPU Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{pod=~\"alfred-mcp-microsoft-graph.*\"}[5m])",
+            "legendFormat": "{{pod}}"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 }
+      },
+      {
+        "id": 6,
+        "title": "Pod Memory Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "container_memory_usage_bytes{pod=~\"alfred-mcp-microsoft-graph.*\"}",
+            "legendFormat": "{{pod}}"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 }
+      },
+      {
+        "id": 7,
+        "title": "Redis Cache Hit Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(redis_hits_total{job=\"alfred-graph-api\"}[5m]) / (rate(redis_hits_total{job=\"alfred-graph-api\"}[5m]) + rate(redis_misses_total{job=\"alfred-graph-api\"}[5m]))",
+            "legendFormat": "Cache Hit Rate"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 }
+      },
+      {
+        "id": 8,
+        "title": "Workbook Operations by Type",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "sum by (operation_type) (rate(workbook_operations_total{job=\"alfred-graph-api\"}[5m]))",
+            "legendFormat": "{{operation_type}}"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 }
+      }
+    ],
+    "refresh": "30s",
+    "time": { "from": "now-6h", "to": "now" },
+    "timepicker": {
+      "refresh_intervals": ["10s", "30s", "1m", "5m", "15m"]
+    }
+  }
+}
+

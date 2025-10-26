@@ -1,0 +1,15 @@
+apiVersion: v2
+name: alfred-mcp-microsoft-graph
+description: Alfred Microsoft Graph API Service
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - alfred
+  - microsoft-graph
+  - excel
+  - api
+maintainers:
+  - name: Alfred Team
+    email: hello@chatwithalfred.com
+

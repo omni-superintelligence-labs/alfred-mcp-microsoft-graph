@@ -7,13 +7,35 @@
   },
   "scripts": {
     "dev": "tsx src/index.ts",
+    "dev:http": "tsx src/http-server.ts",
+    "dev:fastify": "tsx src/fastify-server.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "start:http": "node dist/http-server.js",
+    "start:fastify": "node dist/fastify-server.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
+    "@azure/identity": "^4.0.0",
+    "@azure/msal-node": "^2.6.0",
+    "fastify": "^4.26.0",
+    "@fastify/cors": "^9.0.1",
+    "@fastify/helmet": "^11.1.1",
+    "@fastify/rate-limit": "^9.1.0",
     "zod": "^3.24.1",
-    "undici": "^7.2.0"
+    "undici": "^7.2.0",
+    "pino": "^8.19.0",
+    "pino-pretty": "^10.3.1",
+    "jose": "^5.2.0",
+    "ioredis": "^5.3.2",
+    "opossum": "^8.1.2",
+    "@opentelemetry/api": "^1.8.0",
+    "@opentelemetry/sdk-node": "^0.49.1",
+    "@opentelemetry/auto-instrumentations-node": "^0.42.0",
+    "@opentelemetry/exporter-prometheus": "^0.49.1",
+    "@opentelemetry/instrumentation-fastify": "^0.35.0",
+    "@opentelemetry/instrumentation-ioredis": "^0.39.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

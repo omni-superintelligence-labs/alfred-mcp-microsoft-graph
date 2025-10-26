@@ -1,0 +1,129 @@
+replicaCount: 2
+
+image:
+  repository: alfred-mcp-microsoft-graph
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 3100
+  targetPort: 3100
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+  hosts:
+    - host: graph-api.alfred.svc.cluster.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: graph-api-tls
+      hosts:
+        - graph-api.alfred.svc.cluster.local
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+  # Custom metrics for Graph API
+  metrics:
+    - type: Pods
+      pods:
+        metric:
+          name: graph_api_requests_per_second
+        target:
+          type: AverageValue
+          averageValue: "50"
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 3100
+  initialDelaySeconds: 10
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 3100
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+env:
+  - name: NODE_ENV
+    value: "production"
+  - name: HTTP_PORT
+    value: "3100"
+  - name: AZURE_TENANT_ID
+    value: "common"
+
+# Secrets from External Secrets
+externalSecrets:
+  - name: azure-credentials
+    keys:
+      - AZURE_CLIENT_ID
+      - AZURE_CLIENT_SECRET
+      - AZURE_API_CLIENT_ID
+
+redis:
+  enabled: true
+  host: redis-master
+  port: 6379
+  auth:
+    enabled: true
+    existingSecret: redis-auth
+
+serviceMonitor:
+  enabled: true
+  interval: 30s
+  path: /metrics
+
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: alfred-frontend
+      ports:
+        - protocol: TCP
+          port: 3100
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: redis
+      ports:
+        - protocol: TCP
+          port: 6379
+    - to: [] # Allow all external (for Microsoft Graph API)
+      ports:
+        - protocol: TCP
+          port: 443
+
